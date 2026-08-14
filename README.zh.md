@@ -4,6 +4,14 @@
 
 [English](README.md) | 中文
 
+<p align="center">
+  <img alt="GitHub stars" src="https://img.shields.io/github/stars/Lings01/dsh-filepanel-plugin?style=flat-square">
+  <img alt="Release downloads" src="https://img.shields.io/github/downloads/Lings01/dsh-filepanel-plugin/total?style=flat-square">
+  <img alt="Release" src="https://img.shields.io/github/v/release/Lings01/dsh-filepanel-plugin?style=flat-square">
+  <img alt="License" src="https://img.shields.io/github/license/Lings01/dsh-filepanel-plugin?style=flat-square">
+  <img alt="Last commit" src="https://img.shields.io/github/last-commit/Lings01/dsh-filepanel-plugin?style=flat-square">
+</p>
+
 一个运行在 DSH Web 界面中的**动态 Cordis 插件**：从屏幕右侧边缘滑出一个文件面板，浏览、上传、下载、预览、编辑、搜索、压缩…… 当前工作区的全部文件操作，都在浏览器里完成。
 
 UI 无 emoji，全部使用 **SVG 线条图标**，配色全面接入 **DSH 主题令牌**（`--dsw-alias-*`），亮/暗主题自动适配。

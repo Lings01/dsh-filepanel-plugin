@@ -4,6 +4,14 @@
 
 English | [中文](README.zh.md)
 
+<p align="center">
+  <img alt="GitHub stars" src="https://img.shields.io/github/stars/Lings01/dsh-filepanel-plugin?style=flat-square">
+  <img alt="Release downloads" src="https://img.shields.io/github/downloads/Lings01/dsh-filepanel-plugin/total?style=flat-square">
+  <img alt="Release" src="https://img.shields.io/github/v/release/Lings01/dsh-filepanel-plugin?style=flat-square">
+  <img alt="License" src="https://img.shields.io/github/license/Lings01/dsh-filepanel-plugin?style=flat-square">
+  <img alt="Last commit" src="https://img.shields.io/github/last-commit/Lings01/dsh-filepanel-plugin?style=flat-square">
+</p>
+
 A **dynamic Cordis plugin** for the DSH web shell. Hover the right edge of the screen and a file panel slides out, giving you browse / upload / download / preview / edit / search / archive — every file operation for the current workspace, all in the browser.
 
 The UI uses **SVG line icons (no emoji)** and is fully themed with **DSH design tokens** (`--dsw-alias-*`), automatically adapting to light/dark themes.
