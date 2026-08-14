@@ -1,0 +1,22 @@
+{
+  "name": "dsh-filepannel-plugin",
+  "version": "1.0.0",
+  "description": "A workspace file panel for the DeepSeek Harness (DSH) web UI — browse, upload, download, preview, edit, search and archive files of the current workspace.",
+  "type": "module",
+  "files": [
+    "src"
+  ],
+  "license": "MIT",
+  "keywords": [
+    "dsh",
+    "deepseek-harness",
+    "cordis",
+    "plugin",
+    "file-panel",
+    "workspace"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Lings01/dsh-filepannel-plugin.git"
+  }
+}
