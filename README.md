@@ -1,86 +1,82 @@
-# dsh-filepannel-plugin
+# dsh-filepanel-plugin
 
-> DeepSeek Harness (DSH) 工作区文件面板插件 —— 在浏览器界面中管理当前工作区文件的可视化面板。
+> A workspace file panel for the DeepSeek Harness (DSH) — manage the files of the current workspace right inside the browser UI.
 
-[English](README.en.md) | [中文](README.md)
+English | [中文](README.zh.md)
 
-一个运行在 DSH Web 界面中的**动态 Cordis 插件**：从屏幕右侧边缘滑出一个文件面板，浏览、上传、下载、预览、编辑、搜索、压缩…… 当前工作区的全部文件操作，都在浏览器里完成。
+A **dynamic Cordis plugin** for the DSH web shell. Hover the right edge of the screen and a file panel slides out, giving you browse / upload / download / preview / edit / search / archive — every file operation for the current workspace, all in the browser.
 
-UI 无 emoji，全部使用 **SVG 线条图标**，配色全面接入 **DSH 主题令牌**（`--dsw-alias-*`），亮/暗主题自动适配。
+The UI uses **SVG line icons (no emoji)** and is fully themed with **DSH design tokens** (`--dsw-alias-*`), automatically adapting to light/dark themes.
 
-## 功能一览
+## Features
 
-| 分类 | 功能 |
+| Category | Details |
 | --- | --- |
-| 入口 | 屏幕最右边缘热区/标签，鼠标悬停 0.3s 滑出，移出面板 0.5s 自动收起；面板宽度可拖拽调整 |
-| 浏览 | 面包屑导航、上级目录、刷新、目录内过滤、目录优先排序 |
-| 传输 | **流式上传**（1MB/块、进度条 + 速率 + 可取消、上限 2GB、临时文件原子替换）、下载、浏览器新标签打开 |
-| 预览 | PDF（内嵌浏览器阅读器）、图片、文本/代码（行号 + 语法高亮 + 编辑，Ctrl/Cmd+S 保存） |
-| 文件操作 | 新建文件/文件夹、重命名、删除（二次确认）、复制路径、移动/复制到其他目录（目录选择器） |
-| 批量 | 多选 → 批量下载 / 打包 / 移动 / 复制 / 删除 |
-| 搜索 | **全工作区递归搜索**：文件名 + 文本内容匹配，结果一键直达 |
-| 压缩 | 选中项打包为 zip；`.zip` 文件一键解压到当前目录 |
-| 上传方式 | 按钮选择 + **拖拽上传**（拖入面板即传） |
+| Entry | Right-edge hotzone + tab: hover 0.3s to slide out, leave 0.5s to auto-hide; drawer width is drag-resizable |
+| Browsing | Breadcrumbs, parent directory, refresh, in-directory filter, directories first |
+| Transfer | **Streaming upload** (1MB chunks, progress bar + speed + cancel, up to 2GB, atomic temp-file replacement), download, open in a new browser tab |
+| Preview | PDF (in-iframe reader), images, text/code (line numbers + syntax highlight + edit with Ctrl/Cmd+S) |
+| File ops | New file/folder, rename, delete (confirmed), copy path, move/copy to another directory (directory picker) |
+| Batch | Multi-select → batch download / archive / move / copy / delete |
+| Search | **Recursive workspace search**: file names + text content, one click to jump |
+| Archive | Pack selected items to zip; one-click unzip of `.zip` files |
+| Upload | Button picker + **drag & drop** straight into the panel |
 
-## 截图
+## How it works
 
-（暂无截图 —— 请打开面板自行体验）
+A **Host + Client** dynamic Cordis plugin:
 
-## 工作原理
+- **Host half** (`src/host.js`):
+  - Registers 15 Package-private RPC methods via `harness.handle` (list, search, read/write, move/copy, zip/unzip, streamed upload, …)
+  - Registers the same-origin download route `/__dsh__/filepanel/download` on `webServer`, guarded by a one-time token + workspace containment, supporting `inline` preview (images/PDF) and attachment downloads
+  - Every path is constrained inside the session workspace via `fs.contains`; writes honor the session sandbox policy (`workspace-write`)
+- **Client half** (`src/client.js`):
+  - Registers into the `shell.overlay` slot (a floating layer; no shipped UI is replaced)
+  - React components + inline SVG icons + DSH theme tokens — no build step, no external dependencies
 
-这是一个 **Host + Client 双端**的动态 Cordis 插件：
+### RPC methods (`panel.*`)
 
-- **Host 半部**（`src/host.js`）：
-  - 通过 `harness.handle` 注册 15 个 Package-private RPC 方法（列表、搜索、读写、移动/复制、zip/unzip、流式上传等）
-  - 在 `webServer` 注册同源下载路由 `/__dsh__/filepanel/download`，带一次性令牌 + 工作区包含校验，支持 `inline` 预览（图片/PDF）与附件下载
-  - 所有路径经 `fs.contains` 强制约束在会话工作区内；写操作遵循会话沙箱策略（`workspace-write`）
-- **Client 半部**（`src/client.js`）：
-  - 注册到 `shell.overlay` 插槽（浮动层，不替换任何自带 UI）
-  - React 组件 + 内联 SVG 图标 + DSH 主题令牌，无需构建、无外部依赖
-
-### RPC 方法表（`panel.*`）
-
-| 方法 | 说明 |
+| Method | Description |
 | --- | --- |
-| `list` | 列出目录（名称/类型/大小/绝对路径） |
-| `search` | 递归搜索（文件名 + ≤256KB 文本文件内容；深度 ≤8，结果 ≤200） |
-| `readText` / `writeText` | 文本读取（≤512KB 预览）/ 原子写入 |
-| `createDir` / `remove` / `rename` | 新建目录 / 删除 / 重命名 |
-| `move` / `copy` | 批量移动 / 递归复制（含同名冲突检查） |
-| `zip` / `unzip` | 打包（`zip -r`）/ 解压（`unzip -o`） |
-| `uploadStart` / `uploadChunk` / `uploadAbort` | 流式上传（base64 分块写入临时文件，完成后原子替换） |
-| `token` | 下载路由一次性令牌 |
+| `list` | List a directory (name/type/size/absolute path) |
+| `search` | Recursive search (names + content of text files ≤256KB; depth ≤8, ≤200 results) |
+| `readText` / `writeText` | Read (≤512KB preview) / atomic write |
+| `createDir` / `remove` / `rename` | mkdir / delete / rename |
+| `move` / `copy` | Batch move / recursive copy (with name-conflict checks) |
+| `zip` / `unzip` | Pack (`zip -r`) / unpack (`unzip -o`) |
+| `uploadStart` / `uploadChunk` / `uploadAbort` | Streamed upload (base64 chunks to a temp file, atomic rename on finish) |
+| `token` | One-time token for the download route |
 
-## 安装与使用
+## Install & use
 
-当前版本以 **DSH 动态插件**形式运行（无需改部署配置、无需构建）：
+Currently shipped as a **DSH dynamic plugin** (no deployment changes, no build):
 
-1. 在 DSH 会话中调用 `cordis_define`，提供 `src/host.js` 与 `src/client.js` 两段代码（函数体，不含外层 `export`）。
-2. 调用 `cordis_run` 激活（Client 半部首次需在界面中批准）。
-3. 激活后：**鼠标移到屏幕最右边缘**悬停片刻，文件面板即从右侧滑出；或点击右侧边缘的文件夹标签。
+1. Call `cordis_define` in a DSH session with the bodies of `src/host.js` and `src/client.js`.
+2. Call `cordis_run` to activate (the Client half needs approval the first time).
+3. Hover the **right edge of the screen** for a moment — the panel slides out; or click the folder tab on the edge.
 
-> 注意：动态插件是进程内临时扩展，重启后需重新定义/运行。若要持久化，可将该插件纳入 DSH 部署的 Cordis 组合（`cordis.yml`）。
+> Note: dynamic plugins are process-local; they need to be redefined after a restart. To persist, mount the plugin in the deployment's Cordis composition (`cordis.yml`).
 
-## 依赖与限制
+## Dependencies & limits
 
-- Host 依赖服务：`fs`、`shell`、`webServer`、`sandboxPolicy`（DSH 标准能力，均随部署提供）
-- 压缩功能依赖系统命令 `zip` / `unzip`（Linux 常见，未安装时仅打包/解压不可用）
-- 上传上限 2GB；预览上限：文本 512KB、图片/PDF 256MB；全局搜索限深度 8、访问节点 4000、结果 200
-- 「用系统应用打开」在无图形界面的服务器上不可用（会给出友好提示；请使用面板内预览或浏览器打开）
+- Host services used: `fs`, `shell`, `webServer`, `sandboxPolicy` (standard DSH capabilities)
+- Archiving requires the system `zip` / `unzip` commands
+- Uploads up to 2GB; previews: text 512KB, images/PDF 256MB; global search limited to depth 8 / 4000 nodes / 200 results
+- "Open with system app" is unavailable on headless servers (a friendly hint is shown — use in-panel preview or browser open instead)
 
-## 开发
+## Development
 
 ```text
 dsh-filepannel-plugin/
 ├── src/
-│   ├── host.js        # Host 半部（RPC + 下载路由）
-│   └── client.js      # Client 半部（面板 UI）
+│   ├── host.js        # Host half (RPC + download route)
+│   └── client.js      # Client half (panel UI)
 ├── README.md          # 中文文档
 ├── README.en.md       # English docs
 └── LICENSE            # MIT
 ```
 
-提交 PR 前请保持：无 emoji、配色仅用 DSH 主题令牌、纯 JavaScript（无 TS/JSX/构建）。
+Before opening a PR: no emoji, theme tokens only for colors, plain JavaScript (no TS/JSX/build).
 
 ## License
 
